@@ -1,13 +1,24 @@
+/// Modèle représentant un joueur de football
+/// Contient toutes les informations d'un joueur et ses méthodes associées
 class Player {
+  /// Identifiant unique du joueur
   final int id;
+  /// Nom complet du joueur
   final String name;
+  /// Poste du joueur sur le terrain
   final String position;
+  /// Date de naissance du joueur
   final String birthDate;
+  /// Nationalité du joueur
   final String nationality;
+  /// URL de la photo du joueur
   final String photo;
+  /// ID de l'équipe du joueur
   final int teamId;
+  /// Nom de l'équipe du joueur
   final String teamName;
 
+  /// Constructeur du modèle Player
   Player({
     required this.id,
     required this.name,
@@ -19,6 +30,10 @@ class Player {
     required this.teamName,
   });
 
+  /// Crée une instance de Player à partir des données JSON de l'API
+  /// [json] : Données JSON du joueur
+  /// [teamId] : ID de l'équipe du joueur
+  /// [teamName] : Nom de l'équipe du joueur
   factory Player.fromJson(Map<String, dynamic> json, int teamId, String teamName) {
     String birthDateFromApi = json['dateOfBirth'] ?? '';
 
@@ -34,6 +49,7 @@ class Player {
     );
   }
 
+  /// Convertit l'objet Player en Map pour le stockage en base de données
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -47,7 +63,8 @@ class Player {
     };
   }
 
-  // Optionnel : calculer l'âge à partir de birthDate
+  /// Calcule l'âge du joueur à partir de sa date de naissance
+  /// Retourne 0 si la date de naissance n'est pas valide
   int get age {
     if (birthDate.isEmpty) return 0;
     try {

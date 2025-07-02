@@ -5,80 +5,94 @@ import '../models/competition.dart';
 import '../models/team.dart';
 import '../models/player.dart';
 
+/// Service qui gère toutes les requêtes API vers football-data.org
+/// Permet de récupérer les données des équipes, joueurs et compétitions
 class ApiService {
-  // Correction : pas de const ici, juste final
-  final String apiKey = '2e41e44e31754e48b9b91087ee7a5f67';
+    /// Clé d'API pour l'authentification auprès de football-data.org
+    final String apiKey = '2e41e44e31754e48b9b91087ee7a5f67';
 
-  // Constructeur (optionnel ici, mais utile pour futures options)
-  ApiService();
+    /// Constructeur du service API
+    ApiService();
 
-  Future<List<Team>> fetchTeamsFromApi() async {
-    final response = await http.get(
-      Uri.parse('https://api.football-data.org/v4/competitions/PL/teams'),
-      headers: {'X-Auth-Token': apiKey},
-    );
+    /// Récupère la liste des équipes de la Premier League
+    /// Retourne une liste d'objets Team
+    Future<List<Team>> fetchTeamsFromApi() async {
+        final response = await http.get(
+            Uri.parse('https://api.football-data.org/v4/competitions/PL/teams'),
+            headers: {'X-Auth-Token': apiKey},
+        );
 
-    if (response.statusCode == 200) {
-      final decoded = json.decode(response.body);
-      final List teamsJson = decoded['teams'] ?? [];
+        if (response.statusCode == 200) {
+            final decoded = json.decode(response.body);
+            final List teamsJson = decoded['teams'] ?? [];
 
-      return teamsJson.map((json) => Team.fromJson(json)).toList();
-    } else {
-      throw Exception('Erreur lors du chargement des équipes');
+            return teamsJson.map((json) => Team.fromJson(json)).toList();
+        } else {
+            throw Exception('Erreur lors du chargement des équipes');
+        }
     }
-  }
-  Future<List<Competition>> fetchCompetitionsFromApi() async {
-    final response = await http.get(
-      Uri.parse('https://api.football-data.org/v4/competitions'),
-      headers: {'X-Auth-Token': apiKey},
-    );
 
-    if (response.statusCode == 200) {
-      final List competitionsJson = json.decode(response.body)['competitions'];
-      return competitionsJson.map((json) => Competition.fromJson(json)).toList();
-    } else {
-      throw Exception('Erreur lors du chargement des compétitions');
+    /// Récupère la liste de toutes les compétitions disponibles
+    /// Retourne une liste d'objets Competition
+    Future<List<Competition>> fetchCompetitionsFromApi() async {
+        final response = await http.get(
+            Uri.parse('https://api.football-data.org/v4/competitions'),
+            headers: {'X-Auth-Token': apiKey},
+        );
+
+        if (response.statusCode == 200) {
+            final List competitionsJson = json.decode(response.body)['competitions'];
+            return competitionsJson.map((json) => Competition.fromJson(json)).toList();
+        } else {
+            throw Exception('Erreur lors du chargement des compétitions');
+        }
     }
-  }
 
-  Future<List<Team>> searchTeams(String query) async {
-    List<Team> allTeams = await fetchTeamsFromApi();
-    return allTeams.where((team) =>
-        team.name.toLowerCase().contains(query.toLowerCase())).toList();
-  }
-
-
-  Future<List<Player>> fetchPlayersFromApi(Team team) async {
-    final response = await http.get(
-      Uri.parse('https://api.football-data.org/v4/teams/${team.id}'),
-      headers: {'X-Auth-Token': apiKey},
-    );
-
-    if (response.statusCode == 200) {
-      final decoded = json.decode(response.body);
-      final List playersJson = decoded['squad'] ?? [];
-
-      return playersJson
-          .map<Player>((json) => Player.fromJson(json, team.id, team.name))
-          .toList();
-    } else {
-      throw Exception('Erreur lors du chargement des joueurs de l\'équipe ${team.id}');
+    /// Recherche des équipes par nom
+    /// [query] : Le terme de recherche
+    /// Retourne une liste filtrée d'équipes
+    Future<List<Team>> searchTeams(String query) async {
+        List<Team> allTeams = await fetchTeamsFromApi();
+        return allTeams.where((team) =>
+            team.name.toLowerCase().contains(query.toLowerCase())).toList();
     }
-  }
 
-  // Dans api_service.dart
-  Future<List<Team>> fetchTeamsByCompetition(int competitionId) async {
-    final response = await http.get(
-      Uri.parse('https://api.football-data.org/v4/competitions/$competitionId/teams'),
-      headers: {'X-Auth-Token': apiKey},
-    );
+    /// Récupère la liste des joueurs d'une équipe spécifique
+    /// [team] : L'équipe dont on veut récupérer les joueurs
+    /// Retourne une liste d'objets Player
+    Future<List<Player>> fetchPlayersFromApi(Team team) async {
+        final response = await http.get(
+            Uri.parse('https://api.football-data.org/v4/teams/${team.id}'),
+            headers: {'X-Auth-Token': apiKey},
+        );
 
-    if (response.statusCode == 200) {
-      final decoded = json.decode(response.body);
-      final List teamsJson = decoded['teams'] ?? [];
-      return teamsJson.map((json) => Team.fromJson(json)).toList();
-    } else {
-      throw Exception('Erreur lors du chargement des équipes de la compétition');
+        if (response.statusCode == 200) {
+            final decoded = json.decode(response.body);
+            final List playersJson = decoded['squad'] ?? [];
+
+            return playersJson
+                .map<Player>((json) => Player.fromJson(json, team.id, team.name))
+                .toList();
+        } else {
+            throw Exception('Erreur lors du chargement des joueurs de l\'équipe ${team.id}');
+        }
     }
-  }
+
+    /// Récupère la liste des équipes d'une compétition spécifique
+    /// [competitionId] : L'ID de la compétition
+    /// Retourne une liste d'objets Team
+    Future<List<Team>> fetchTeamsByCompetition(int competitionId) async {
+        final response = await http.get(
+            Uri.parse('https://api.football-data.org/v4/competitions/$competitionId/teams'),
+            headers: {'X-Auth-Token': apiKey},
+        );
+
+        if (response.statusCode == 200) {
+            final decoded = json.decode(response.body);
+            final List teamsJson = decoded['teams'] ?? [];
+            return teamsJson.map((json) => Team.fromJson(json)).toList();
+        } else {
+            throw Exception('Erreur lors du chargement des équipes de la compétition');
+        }
+    }
 }
